@@ -1,16 +1,19 @@
-// components/Statistics.tsx
 "use client";
 
 import React from "react";
 import { useMoodContext } from "./MoodContext";
 import StatisticsBar from "./StatisticsBar";
+import type { StatusType } from "./StatisticsBar";
 
 export default function Statistics() {
   const { entries } = useMoodContext();
-  const total = entries.length; // ← correct total of all entries
+  const total = entries.length; // Correct total of all entries
+
+  // Define a type for moods
+  type Mood = "Excellent" | "Good" | "Neutral" | "Sad" | "Very Sad";
 
   // Count each of the five moods
-  const counts: Record<string, number> = {
+  const counts: Record<Mood, number> = {
     Excellent: 0,
     Good: 0,
     Neutral: 0,
@@ -18,11 +21,11 @@ export default function Statistics() {
     "Very Sad": 0,
   };
   entries.forEach((e) => {
-    counts[e.mood] = (counts[e.mood] || 0) + 1;
+    counts[e.mood as Mood] = (counts[e.mood as Mood] || 0) + 1;
   });
 
   // Display order
-  const ORDER: (keyof typeof counts)[] = [
+  const ORDER: Mood[] = [
     "Excellent",
     "Good",
     "Neutral",
@@ -30,8 +33,8 @@ export default function Statistics() {
     "Very Sad",
   ];
 
-  // Map the “key” to our StatusType (so we can pick the right gradient)
-  const mapMoodToStatus = (m: keyof typeof counts) => {
+  // Map mood to status type
+  const mapMoodToStatus = (m: Mood): StatusType => {
     switch (m) {
       case "Excellent":
         return "excellent";
@@ -43,11 +46,13 @@ export default function Statistics() {
         return "sad";
       case "Very Sad":
         return "verySad";
+      default:
+        return "neutral"; // Fallback for undefined values
     }
   };
 
   // Emoji for each mood
-  const emojiMap: Record<string, string> = {
+  const emojiMap: Record<Mood, string> = {
     Excellent: "😄",
     Good: "😊",
     Neutral: "😐",
@@ -55,7 +60,7 @@ export default function Statistics() {
     "Very Sad": "😢",
   };
 
-  // Exact gradients for each StatusType
+  // Gradients for each status type
   const gradientMap: Record<string, string> = {
     excellent: "from-green-400 to-green-600",
     good: "from-blue-400 to-cyan-500",
@@ -76,10 +81,9 @@ export default function Statistics() {
       <div className="space-y-6">
         {ORDER.map((moodKey) => {
           const count = counts[moodKey] || 0;
-          // ← Correct percentage formula:
+          const status: StatusType = mapMoodToStatus(moodKey);
+          const gradient = gradientMap[status] || "from-gray-400 to-gray-600"; // Default fallback
           const pct = total > 0 ? (count / total) * 100 : 0;
-          const status = mapMoodToStatus(moodKey);
-          const gradient = gradientMap[status];
 
           return (
             <div key={moodKey} className="space-y-1">
@@ -99,8 +103,8 @@ export default function Statistics() {
               {/* The bar */}
               <StatisticsBar
                 status={status}
-                percentage={pct} // ← pass the correct computed percentage
-                gradient={gradient} // ← pass the correct gradient classes
+                percentage={pct} // Correct computed percentage
+                gradient={gradient} // Correct gradient classes
                 animated={false}
                 ariaLabel={`${moodKey} percentage`}
               />
